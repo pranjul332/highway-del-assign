@@ -5,30 +5,66 @@ import { ChevronLeft, MapPin, Search } from "lucide-react";
 
 const API_BASE = "http://localhost:5000/api/";
 
+// Type definitions
+interface PromoCode {
+  type: "percentage" | "flat";
+  value: number;
+}
 
-const promoCodes = {
+interface Slot {
+  date: string;
+  time: string;
+  available: number;
+}
+
+interface Experience {
+  _id: string;
+  title: string;
+  location: string;
+  description: string;
+  fullDescription: string;
+  price: number;
+  imageUrl: string;
+  dates: string[];
+  slots: Slot[];
+}
+
+interface BookingData {
+  fullName: string;
+  email: string;
+  promoCode: string;
+  agreedToTerms: boolean;
+}
+
+interface BookingResult {
+  success: boolean;
+  message: string;
+  bookingId: string | null;
+}
+
+const promoCodes: Record<string, PromoCode> = {
   SAVE10: { type: "percentage", value: 10 },
   FLAT100: { type: "flat", value: 100 },
 };
 
 function App() {
-  const [page, setPage] = useState("home");
-  const [experiences, setExperiences] = useState([]);
-  const [selectedExperience, setSelectedExperience] = useState(null);
-  const [selectedDate, setSelectedDate] = useState("");
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [quantity, setQuantity] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [bookingData, setBookingData] = useState({
+  const [page, setPage] = useState<string>("home");
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [selectedExperience, setSelectedExperience] = useState<Experience | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [bookingData, setBookingData] = useState<BookingData>({
     fullName: "",
     email: "",
     promoCode: "",
     agreedToTerms: false,
   });
-  const [promoDiscount, setPromoDiscount] = useState(0);
-  const [promoApplied, setPromoApplied] = useState(false);
-  const [bookingResult, setBookingResult] = useState(null);
+  const [promoDiscount, setPromoDiscount] = useState<number>(0);
+  const [promoApplied, setPromoApplied] = useState<boolean>(false);
+  const [bookingResult, setBookingResult] = useState<BookingResult | null>(null);
 
   useEffect(() => {
     fetchExperiences();
@@ -45,35 +81,30 @@ function App() {
       console.log(list);
     } catch (error) {
       console.error("Error fetching experiences:", error);
-      setExperiences([]); 
+      setExperiences([]);
     } finally {
       setLoading(false);
     }
-    
-    
   };
 
-
-
- const fetchExperienceDetails = async (id) => {
-   setLoading(true);
-   try {
-     const response = await fetch(`${API_BASE}experiences/${id}`);
-     const data = await response.json();
-     setSelectedExperience(data);
-     setSelectedDate(data.dates?.[0] || "");
-     setPage("details");
-   } catch (error) {
-     console.error("Error fetching experience details:", error);
-   } finally {
-     setLoading(false);
-   }
- };
-
+  const fetchExperienceDetails = async (id: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}experiences/${id}`);
+      const data: Experience = await response.json();
+      setSelectedExperience(data);
+      setSelectedDate(data.dates?.[0] || "");
+      setPage("details");
+    } catch (error) {
+      console.error("Error fetching experience details:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const applyPromoCode = () => {
     const code = bookingData.promoCode.toUpperCase();
-    if (promoCodes[code]) {
+    if (promoCodes[code] && selectedExperience) {
       const promo = promoCodes[code];
       let discount = 0;
       const subtotal = selectedExperience.price * quantity;
@@ -109,9 +140,8 @@ function App() {
 
     setLoading(true);
     try {
-
       setTimeout(() => {
-        const success = Math.random() > 0.1; 
+        const success = Math.random() > 0.1;
         setBookingResult({
           success,
           message: success
@@ -127,6 +157,7 @@ function App() {
       setBookingResult({
         success: false,
         message: "An error occurred. Please try again.",
+        bookingId: null,
       });
       setLoading(false);
       setPage("result");
@@ -134,6 +165,8 @@ function App() {
   };
 
   const calculateTotal = () => {
+    if (!selectedExperience) return { subtotal: 0, taxes: 0, total: 0 };
+    
     const subtotal = selectedExperience.price * quantity;
     const taxes = Math.round(subtotal * 0.05);
     const total = subtotal + taxes - promoDiscount;
@@ -305,7 +338,7 @@ function App() {
                 <h2 className="text-xl font-semibold mb-4">Choose time</h2>
                 <div className="flex gap-3 flex-wrap">
                   {selectedExperience.slots
-                    .filter((slot) => slot.date === selectedDate) // 👈 Filter by selected date
+                    .filter((slot) => slot.date === selectedDate)
                     .map((slot, idx) => (
                       <button
                         key={idx}
@@ -456,7 +489,7 @@ function App() {
                   <label className="block text-gray-700 mb-2">Email</label>
                   <input
                     type="email"
-                    placeholder="Your name"
+                    placeholder="your.email@example.com"
                     value={bookingData.email}
                     onChange={(e) =>
                       setBookingData({ ...bookingData, email: e.target.value })
@@ -686,6 +719,7 @@ function App() {
                     className="px-8 py-3 bg-gray-200 text-black font-medium rounded-lg hover:bg-gray-300 transition"
                   >
                     Back to Home
+                  
                   </button>
                 </div>
               </>
