@@ -3,9 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { ChevronLeft, MapPin, Search } from "lucide-react";
 
-const API_BASE = "http://localhost:5000/api/";
+const API_BASE = "https://highway-del-assign.onrender.com/api/";
 
-// Type definitions
 interface PromoCode {
   type: "percentage" | "flat";
   value: number;
