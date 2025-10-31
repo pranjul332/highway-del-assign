@@ -3,7 +3,6 @@ const cors = require("cors");
 require("dotenv").config();
 
 const connectDB = require("./db/dbConnection");
-const seedData = require("./utils/seedData");
 
 // Import routes
 const experienceRoutes = require("./routes/experiences");
@@ -44,8 +43,6 @@ const startServer = async () => {
     // Connect to MongoDB
     await connectDB();
 
-    // Seed initial data
-    await seedData();
 
     // Start listening
     app.listen(PORT, () => {
